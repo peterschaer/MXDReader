@@ -36,6 +36,7 @@ namespace MXDReader
 		private string maxscale = "";
 		private string symbfields = "";
 		private string parent = "";
+		private string label = "";
 		List<ILayer> groupLayerList;
 		
 		public LayerInfo(IMapDocument mapDoc)
@@ -121,8 +122,21 @@ namespace MXDReader
 			IGeoFeatureLayer gflyr = flyr as IGeoFeatureLayer;
 			if (gflyr.DisplayAnnotation == true)
 			{
-				// es wird gelabelt
+				IAnnotateLayerPropertiesCollection labelPropsColl = gflyr.AnnotationProperties;
+				for (int collIndex=0; collIndex < labelPropsColl.Count; collIndex++)
+				{
+					IAnnotateLayerProperties annoLayerProps;
+					IElementCollection elCol1;
+					IElementCollection elCol2;
+					labelPropsColl.QueryItem(collIndex, out annoLayerProps, out elCol1, out elCol2);
+					string sql = annoLayerProps.WhereClause;
+					ILabelEngineLayerProperties2 labelEngineProps = (ILabelEngineLayerProperties2)annoLayerProps;
+					string expr = labelEngineProps.Expression;
+					this.label = this.label + sql + "?" + expr + "/";
+				}
 			}
+			this.label = this.label.TrimEnd('/');
+			
 			IFeatureRenderer rend = gflyr.Renderer;
 			if (rend is IUniqueValueRenderer)
 			{
@@ -240,7 +254,7 @@ namespace MXDReader
 		
 		public string writeCSV()
 		{
-			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields + ";" + parent;
+			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields + ";" + parent + ";" + label;
 			return output;
 		}
 		
