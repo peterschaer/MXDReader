@@ -89,7 +89,7 @@ namespace MXDReader
 							{
 								if (!processedLayers.Contains(lyr))
 								{
-									LayerInfo lyrInfo = new LayerInfo(mapDoc.DocumentFilename);
+									LayerInfo lyrInfo = new LayerInfo(mapDoc);
 									lyrInfo.processOtherLayer(lyr);
 									lyrInfos.Add(lyrInfo);
 									processedLayers.Add(lyr);
@@ -135,7 +135,7 @@ namespace MXDReader
 			{
 				if (!processedLayers.Contains(lyr))
 			    {
-					LayerInfo lyrInfo = new LayerInfo(mapDoc.DocumentFilename);
+					LayerInfo lyrInfo = new LayerInfo(mapDoc);
 					switch (lt)
 					{
 						case LayerTypes.GroupLayer:

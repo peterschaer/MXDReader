@@ -8,6 +8,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Carto;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.esriSystem;
@@ -19,6 +20,7 @@ namespace MXDReader
 	/// </summary>
 	public class LayerInfo
 	{
+		private IMapDocument mxd;
 		private string mxdname = "";
 		private string username = "";
 		private string server = "";
@@ -33,11 +35,18 @@ namespace MXDReader
 		private string minscale = "";
 		private string maxscale = "";
 		private string symbfields = "";
+		private string parent = "";
+		List<ILayer> groupLayerList;
 		
-		public LayerInfo(string mxd)
+		public LayerInfo(IMapDocument mapDoc)
 		{
 			/* Diese Eigenschaften sind für jeden Layer identisch */
-			mxdname = mxd;
+			mxd = mapDoc;
+			mxdname = mxd.DocumentFilename;
+
+			UID pID = new UIDClass();
+			pID.Value = "{EDAD6644-1810-11D1-86AE-0000F8751720}";
+			groupLayerList = getLayerList(pID);
 		}
 		
 		private void fillLayerProps(ILayer lyr)
@@ -45,6 +54,27 @@ namespace MXDReader
 			name = lyr.Name;
 			minscale = lyr.MinimumScale.ToString();
 			maxscale = lyr.MaximumScale.ToString();
+			getParentLayerNames(lyr);
+			this.parent = this.parent.TrimStart('/');
+		}
+		
+		private void getParentLayerNames(ILayer lyr)
+		{
+			foreach (ILayer grpLyr in groupLayerList)
+			{
+//				Zuerst Cast nach GroupLayer, erst dann nach ICompositeLayer
+				IGroupLayer grpLyr2 = (IGroupLayer)grpLyr;
+				ICompositeLayer cmpLyr = (ICompositeLayer)grpLyr2;
+				for (int cmpLyrIndex=0; cmpLyrIndex < cmpLyr.Count; cmpLyrIndex++)
+				{
+					ILayer childLyr = cmpLyr.get_Layer(cmpLyrIndex);
+					if (childLyr.Equals(lyr))
+					{
+						this.parent = "/" + grpLyr.Name + this.parent;
+						getParentLayerNames(grpLyr);
+					}
+				}
+			}
 		}
 		
 		private void fillDatalayerProps(ILayer lyr)
@@ -210,8 +240,30 @@ namespace MXDReader
 		
 		public string writeCSV()
 		{
-			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields;
+			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields + ";" + parent;
 			return output;
+		}
+		
+		private List<ILayer> getLayerList(UID id)
+		{
+			List<ILayer> res = new List<ILayer>();
+			// try-catch ist nötig, da get_Layers() eine Exception auslöst,
+			// wenn es keine passenden Layer findet!
+			try
+			{
+				IEnumLayer lyrs = mxd.get_Map(0).get_Layers(id, true);
+				lyrs.Reset();
+				ILayer lyr = lyrs.Next();
+				while (lyr != null)
+				{
+					res.Add(lyr);
+					lyr = lyrs.Next();
+				}
+			}
+			catch 
+			{
+			}
+			return res;
 		}
 	}
 }
