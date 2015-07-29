@@ -207,10 +207,10 @@ namespace MXDReader
 		private esriLicenseStatus InitializeLicense()
 		{
 			esriLicenseStatus LicenseStatus = esriLicenseStatus.esriLicenseUnavailable;
-			LicenseStatus = init.IsProductCodeAvailable(esriLicenseProductCode.esriLicenseProductCodeArcView);
+			LicenseStatus = init.IsProductCodeAvailable(esriLicenseProductCode.esriLicenseProductCodeBasic);
 			if (LicenseStatus == esriLicenseStatus.esriLicenseAvailable)
 			{
-				LicenseStatus = init.Initialize(esriLicenseProductCode.esriLicenseProductCodeArcView);
+				LicenseStatus = init.Initialize(esriLicenseProductCode.esriLicenseProductCodeBasic);
 			} else {
 				LicenseStatus = esriLicenseStatus.esriLicenseUnavailable;
 			}
