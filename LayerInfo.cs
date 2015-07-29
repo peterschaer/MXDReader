@@ -37,6 +37,7 @@ namespace MXDReader
 		private string symbfields = "";
 		private string parent = "";
 		private string label = "";
+		private string relateinfo = "";
 		List<ILayer> groupLayerList;
 		
 		public LayerInfo(IMapDocument mapDoc)
@@ -118,6 +119,7 @@ namespace MXDReader
 			IFeatureLayer flyr = lyr as IFeatureLayer;
 			fillDefQueryProps(flyr);
 			processJoins(flyr);
+			processRelates(flyr);
 			
 			IGeoFeatureLayer gflyr = flyr as IGeoFeatureLayer;
 			if (gflyr.DisplayAnnotation == true)
@@ -201,6 +203,33 @@ namespace MXDReader
 			}
 			joininfo = res;
 		}
+		
+		private void processRelates(IFeatureLayer flyr) 
+		{
+			string res = "";
+			string destName = "";
+			string destServer = "";
+			string destInstance = "";
+			string destUser = "";
+			IRelationshipClassCollection relClassColl = (IRelationshipClassCollection)flyr;
+			IEnumRelationshipClass enumRelClass = relClassColl.RelationshipClasses;
+			enumRelClass.Reset();
+			IRelationshipClass relClass = enumRelClass.Next();
+			while (relClass != null)
+			{
+				IDataset dset = (IDataset)relClass;
+				ITable destTable = (ITable)relClass.DestinationClass;
+				IDataset dsetDest = (IDataset)destTable;
+				destName = dsetDest.Name;
+				destServer = dsetDest.Workspace.ConnectionProperties.GetProperty("server").ToString();
+				destInstance = dsetDest.Workspace.ConnectionProperties.GetProperty("instance").ToString();
+				destUser = dsetDest.Workspace.ConnectionProperties.GetProperty("user").ToString();
+				res = res + "(" + destName + "/" + destServer + "/" + destInstance + "/" + destUser + "/" + relClass.OriginPrimaryKey + "/" + relClass.OriginForeignKey + "/" + dset.BrowseName + ")";
+				relClass = enumRelClass.Next();
+			}
+			
+			relateinfo = res;
+		}
 
 		public void processRasterCatalogLayer(ILayer lyr)
 		{
@@ -254,7 +283,7 @@ namespace MXDReader
 		
 		public string writeCSV()
 		{
-			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields + ";" + parent + ";" + label;
+			string output = mxdname + ";" + name + ";" + type + ";" + owner + ";" + tablename + ";" + server + ";" + instance + ";" + username.ToUpper() + ";" + version + ";" + minscale + ";" + maxscale + ";" + defquery + ";" + joininfo + ";" + symbfields + ";" + parent + ";" + label + ";" + relateinfo;
 			return output;
 		}
 		
