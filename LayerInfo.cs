@@ -105,9 +105,12 @@ namespace MXDReader
 		private void fillDefQueryProps(IFeatureLayer flyr)
 		{
 			IFeatureLayerDefinition flyrdef = flyr as IFeatureLayerDefinition;
-			if (flyrdef.DefinitionExpression != "")
+			if (flyrdef != null)
 			{
-				defquery = flyrdef.DefinitionExpression;
+				if (flyrdef.DefinitionExpression != "")
+				{
+					defquery = flyrdef.DefinitionExpression;
+				}
 			}
 		}
 		
